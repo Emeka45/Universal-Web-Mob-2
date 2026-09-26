@@ -11,6 +11,7 @@ public final class WebClient extends WebViewClient {
     public interface Listener {
         void onPageState(WebView view, String url, String title, boolean loading, boolean error);
         void onDesktopCompatibilityHint(WebView view);
+        void onExternalNavigationUnavailable(WebView view, String url);
     }
 
     private final Listener listener;
@@ -29,7 +30,9 @@ public final class WebClient extends WebViewClient {
         }
 
         if ("intent".equalsIgnoreCase(scheme)) {
-            return WebIntentHandler.openIntentUrl(view.getContext(), uri.toString());
+            boolean handled = WebIntentHandler.openIntentUrl(view.getContext(), uri.toString());
+            if (!handled) listener.onExternalNavigationUnavailable(view, uri.toString());
+            return true;
         }
 
         if ("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme)) {
@@ -39,7 +42,9 @@ public final class WebClient extends WebViewClient {
         // Custom app/deep links must not leave the WebView on a blank/dead page.
         // Launch them externally; if the target app is absent, the handler simply
         // returns false and the current tab remains intact.
-        return WebIntentHandler.openExternal(view.getContext(), uri);
+        boolean handled = WebIntentHandler.openExternal(view.getContext(), uri);
+        if (!handled) listener.onExternalNavigationUnavailable(view, uri == null ? "" : uri.toString());
+        return true;
     }
 
     @Override
