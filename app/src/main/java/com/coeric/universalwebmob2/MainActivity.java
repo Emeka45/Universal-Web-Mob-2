@@ -19,6 +19,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.coeric.universalwebmob2.web.CompatibilityProfile;
@@ -42,6 +43,7 @@ public class MainActivity extends Activity implements WebTabManager.Listener, We
     private EditText address;
     private ProgressBar progress;
     private WebTabManager tabManager;
+    private LinearLayout compatibilityFallbackPanel;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -108,6 +110,11 @@ public class MainActivity extends Activity implements WebTabManager.Listener, We
 
         webContainer = new FrameLayout(this);
         webContainer.setBackgroundColor(Color.WHITE);
+        compatibilityFallbackPanel = buildCompatibilityFallbackPanel();
+        compatibilityFallbackPanel.setVisibility(View.GONE);
+        webContainer.addView(compatibilityFallbackPanel, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT,
+                Gravity.BOTTOM));
 
         root.addView(nav, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, dp(54)));
@@ -154,6 +161,7 @@ public class MainActivity extends Activity implements WebTabManager.Listener, We
     public void onActiveTabChanged(WebTab tab) {
         configureWebView(tab.webView);
         address.setText(displayUrl(tab.webView.getUrl()));
+        hideCompatibilityFallback();
         updateButtons();
     }
 
@@ -355,15 +363,87 @@ public class MainActivity extends Activity implements WebTabManager.Listener, We
     public void onDesktopCompatibilityHint(WebView view) {
         WebTab active = tabManager == null ? null : tabManager.getActive();
         if (active == null || active.webView != view) return;
-        if (active.compatibilityProfile == CompatibilityProfile.DESKTOP
-                || active.desktopRetryAttempted) return;
 
-        active.desktopRetryAttempted = true;
-        active.compatibilityProfile = CompatibilityProfile.DESKTOP;
-        tabManager.applyCompatibility(active);
-        Toast.makeText(this, "Universal compatibility mode enabled for this site.",
-                Toast.LENGTH_SHORT).show();
-        view.reload();
+        if (active.compatibilityProfile != CompatibilityProfile.DESKTOP
+                && !active.desktopRetryAttempted) {
+            active.desktopRetryAttempted = true;
+            active.compatibilityProfile = CompatibilityProfile.DESKTOP;
+            tabManager.applyCompatibility(active);
+            Toast.makeText(this, "Retrying with desktop compatibility…", Toast.LENGTH_SHORT).show();
+            view.reload();
+            return;
+        }
+
+        showCompatibilityFallback();
+    }
+
+    private LinearLayout buildCompatibilityFallbackPanel() {
+        LinearLayout panel = new LinearLayout(this);
+        panel.setOrientation(LinearLayout.VERTICAL);
+        panel.setPadding(dp(14), dp(12), dp(14), dp(12));
+        panel.setBackground(roundRect(Color.rgb(250, 248, 255), dp(18), Color.rgb(225, 218, 242)));
+
+        TextView title = new TextView(this);
+        title.setText("Desktop experience still required");
+        title.setTextSize(15);
+        title.setTextColor(Color.rgb(45, 38, 58));
+        title.setTypeface(null, android.graphics.Typeface.BOLD);
+        panel.addView(title);
+
+        TextView message = new TextView(this);
+        message.setText("Universal Web-Mob 2 tried desktop compatibility. The service may enforce its own app or device restriction.");
+        message.setTextSize(12);
+        message.setTextColor(Color.rgb(105, 96, 116));
+        message.setPadding(0, dp(5), 0, dp(9));
+        panel.addView(message);
+
+        LinearLayout actions = new LinearLayout(this);
+        actions.setGravity(Gravity.END | Gravity.CENTER_VERTICAL);
+
+        Button retry = new Button(this);
+        retry.setText("Retry desktop");
+        retry.setAllCaps(false);
+        retry.setOnClickListener(v -> {
+            WebTab tab = tabManager == null ? null : tabManager.getActive();
+            if (tab == null) return;
+            tab.compatibilityProfile = CompatibilityProfile.DESKTOP;
+            tab.desktopRetryAttempted = true;
+            tabManager.applyCompatibility(tab);
+            hideCompatibilityFallback();
+            tab.webView.reload();
+        });
+        actions.addView(retry, new LinearLayout.LayoutParams(0, dp(42), 1));
+
+        Button external = new Button(this);
+        external.setText("Open externally");
+        external.setAllCaps(false);
+        external.setOnClickListener(v -> {
+            WebTab tab = tabManager == null ? null : tabManager.getActive();
+            if (tab != null && tab.webView.getUrl() != null && !isHomeUrl(tab.webView.getUrl())) {
+                WebIntentHandler.openWebFallback(this, Uri.parse(tab.webView.getUrl()));
+            }
+        });
+        actions.addView(external, new LinearLayout.LayoutParams(0, dp(42), 1));
+
+        Button keep = new Button(this);
+        keep.setText("Keep here");
+        keep.setAllCaps(false);
+        keep.setOnClickListener(v -> hideCompatibilityFallback());
+        actions.addView(keep, new LinearLayout.LayoutParams(0, dp(42), 1));
+
+        panel.addView(actions, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        return panel;
+    }
+
+    private void showCompatibilityFallback() {
+        if (compatibilityFallbackPanel == null) return;
+        compatibilityFallbackPanel.setVisibility(View.VISIBLE);
+        compatibilityFallbackPanel.bringToFront();
+    }
+
+    private void hideCompatibilityFallback() {
+        if (compatibilityFallbackPanel != null) compatibilityFallbackPanel.setVisibility(View.GONE);
     }
 
     private void setCompatibility(CompatibilityProfile profile) {
