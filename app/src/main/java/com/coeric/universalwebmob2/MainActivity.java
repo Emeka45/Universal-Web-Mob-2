@@ -3,19 +3,22 @@ package com.coeric.universalwebmob2;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.coeric.universalwebmob2.web.MainActivityBridge;
@@ -30,9 +33,11 @@ import com.coeric.universalwebmob2.web.WebTabManager;
 import java.util.List;
 
 public class MainActivity extends Activity implements WebTabManager.Listener, WebClient.Listener {
+    private static final int FILE_CHOOSER_REQUEST = 701;
+
     private LinearLayout root;
     private LinearLayout tabStrip;
-    private android.widget.FrameLayout webContainer;
+    private FrameLayout webContainer;
     private EditText address;
     private ProgressBar progress;
     private WebTabManager tabManager;
@@ -42,7 +47,8 @@ public class MainActivity extends Activity implements WebTabManager.Listener, We
         super.onCreate(state);
         buildUi();
         tabManager = new WebTabManager(this, webContainer, this);
-        tabManager.createTab(StartPages.HOME);
+        WebTab first = tabManager.createTab(StartPages.HOME);
+        loadHome(first.webView);
     }
 
     private void buildUi() {
@@ -52,7 +58,13 @@ public class MainActivity extends Activity implements WebTabManager.Listener, We
 
         LinearLayout nav = new LinearLayout(this);
         nav.setGravity(Gravity.CENTER_VERTICAL);
-        nav.setPadding(dp(4), dp(4), dp(4), dp(2));
+        nav.setPadding(dp(6), dp(6), dp(6), dp(4));
+        nav.setBackgroundColor(Color.WHITE);
+
+        ImageView logo = new ImageView(this);
+        logo.setImageResource(com.coeric.universalwebmob2.R.drawable.ic_logo);
+        logo.setPadding(dp(3), dp(3), dp(3), dp(3));
+        nav.addView(logo, new LinearLayout.LayoutParams(dp(40), dp(40)));
 
         addNavButton(nav, "‹", v -> goBack());
         addNavButton(nav, "›", v -> goForward());
@@ -61,14 +73,22 @@ public class MainActivity extends Activity implements WebTabManager.Listener, We
 
         address = new EditText(this);
         address.setSingleLine(true);
-        address.setHint("Search or enter web address");
+        address.setHint(getString(R.string.address_hint));
         address.setTextSize(14);
-        address.setPadding(dp(10), 0, dp(10), 0);
+        address.setTextColor(Color.rgb(35, 32, 45));
+        address.setHintTextColor(Color.rgb(125, 120, 135));
+        address.setPadding(dp(14), 0, dp(14), 0);
+        address.setSelectAllOnFocus(true);
+        address.setImeOptions(EditorInfo.IME_ACTION_GO);
+        address.setInputType(android.text.InputType.TYPE_CLASS_TEXT
+                | android.text.InputType.TYPE_TEXT_VARIATION_URI);
+        address.setBackground(roundRect(Color.rgb(247, 245, 251), dp(22), Color.TRANSPARENT));
         address.setOnEditorActionListener((v, actionId, event) -> {
             navigate(address.getText().toString());
+            address.clearFocus();
             return true;
         });
-        nav.addView(address, new LinearLayout.LayoutParams(0, dp(46), 1));
+        nav.addView(address, new LinearLayout.LayoutParams(0, dp(42), 1));
 
         addNavButton(nav, "⋮", this::showMenu);
 
@@ -78,33 +98,49 @@ public class MainActivity extends Activity implements WebTabManager.Listener, We
 
         HorizontalScrollView tabScroller = new HorizontalScrollView(this);
         tabScroller.setHorizontalScrollBarEnabled(false);
+        tabScroller.setFillViewport(false);
         tabStrip = new LinearLayout(this);
         tabStrip.setGravity(Gravity.CENTER_VERTICAL);
+        tabStrip.setPadding(dp(6), dp(2), dp(6), dp(4));
         tabScroller.addView(tabStrip, new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT, dp(42)));
+                ViewGroup.LayoutParams.WRAP_CONTENT, dp(44)));
 
-        webContainer = new android.widget.FrameLayout(this);
+        webContainer = new FrameLayout(this);
+        webContainer.setBackgroundColor(Color.WHITE);
 
         root.addView(nav, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, dp(54)));
         root.addView(progress, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, dp(3)));
+                ViewGroup.LayoutParams.MATCH_PARENT, dp(2)));
         root.addView(tabScroller, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, dp(42)));
+                ViewGroup.LayoutParams.MATCH_PARENT, dp(44)));
         root.addView(webContainer, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, 0, 1));
+
         setContentView(root);
     }
 
     private void addNavButton(LinearLayout parent, String text, View.OnClickListener listener) {
         Button b = new Button(this);
         b.setText(text);
-        b.setTextSize(18);
+        b.setTextSize(19);
+        b.setTextColor(Color.rgb(70, 64, 82));
+        b.setAllCaps(false);
         b.setMinWidth(0);
         b.setMinimumWidth(0);
-        b.setPadding(dp(6), 0, dp(6), 0);
+        b.setPadding(0, 0, 0, 0);
+        b.setGravity(Gravity.CENTER);
+        b.setBackground(roundRect(Color.WHITE, dp(20), Color.TRANSPARENT));
         b.setOnClickListener(listener);
-        parent.addView(b, new LinearLayout.LayoutParams(dp(48), dp(46)));
+        parent.addView(b, new LinearLayout.LayoutParams(dp(38), dp(42)));
+    }
+
+    private GradientDrawable roundRect(int fill, int radius, int stroke) {
+        GradientDrawable drawable = new GradientDrawable();
+        drawable.setColor(fill);
+        drawable.setCornerRadius(radius);
+        if (stroke != Color.TRANSPARENT) drawable.setStroke(dp(1), stroke);
+        return drawable;
     }
 
     private void configureWebView(WebView view) {
@@ -123,38 +159,85 @@ public class MainActivity extends Activity implements WebTabManager.Listener, We
     @Override
     public void onTabsChanged(List<WebTab> tabs) {
         tabStrip.removeAllViews();
+
         for (WebTab tab : tabs) {
             Button b = new Button(this);
-            b.setText(tab.title);
+            b.setText(tab.title == null || tab.title.trim().isEmpty() ? "New Tab" : tab.title);
             b.setTextSize(12);
+            b.setTextColor(Color.rgb(62, 55, 76));
             b.setAllCaps(false);
+            b.setMinWidth(0);
+            b.setMinimumWidth(0);
+            b.setSingleLine(true);
+            b.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            b.setPadding(dp(10), 0, dp(10), 0);
+            b.setBackground(roundRect(
+                    tabManager.getActive() == tab
+                            ? Color.rgb(239, 234, 255)
+                            : Color.rgb(249, 248, 251),
+                    dp(16),
+                    Color.TRANSPARENT));
             b.setOnClickListener(v -> tabManager.selectTab(tab.id));
-            tabStrip.addView(b, new LinearLayout.LayoutParams(dp(150), dp(42)));
+            tabStrip.addView(b, new LinearLayout.LayoutParams(dp(154), dp(38)));
         }
+
+        Button add = new Button(this);
+        add.setText("+");
+        add.setTextSize(20);
+        add.setTextColor(Color.rgb(86, 73, 120));
+        add.setAllCaps(false);
+        add.setMinWidth(0);
+        add.setMinimumWidth(0);
+        add.setPadding(0, 0, 0, 0);
+        add.setBackground(roundRect(Color.rgb(247, 245, 251), dp(19), Color.TRANSPARENT));
+        add.setOnClickListener(v -> {
+            WebTab tab = tabManager.createTab(StartPages.HOME);
+            loadHome(tab.webView);
+        });
+        tabStrip.addView(add, new LinearLayout.LayoutParams(dp(40), dp(38)));
     }
 
     @Override
     public void onPageState(WebView view, String url, String title, boolean loading, boolean error) {
         WebTab active = tabManager.getActive();
         if (active == null || active.webView != view) return;
-        active.title = (title == null || title.trim().isEmpty()) ? "New Tab" : title;
+
+        active.title = (title == null || title.trim().isEmpty())
+                ? (isHomeUrl(url) ? "Welcome" : "New Tab")
+                : title;
+
         address.setText(displayUrl(url));
         progress.setVisibility(loading ? View.VISIBLE : View.GONE);
         progress.setProgress(loading ? 60 : 100);
-        if (error) Toast.makeText(this, "Page failed to load. Use ↻ to retry.", Toast.LENGTH_SHORT).show();
+
+        if (error) {
+            Toast.makeText(this, "Page failed to load. Use ↻ to retry.", Toast.LENGTH_SHORT).show();
+        }
+
         onTabsChanged(tabManager.getTabs());
     }
 
+    private boolean isHomeUrl(String url) {
+        return url == null
+                || url.isEmpty()
+                || "about:blank".equals(url)
+                || StartPages.HOME.equals(url);
+    }
+
     private String displayUrl(String url) {
-        if (url == null || StartPages.HOME.equals(url)) return "";
-        return url;
+        return isHomeUrl(url) ? "" : url;
     }
 
     private void navigate(String raw) {
         String value = raw == null ? "" : raw.trim();
         if (value.isEmpty()) return;
-        if (!value.contains("://") && value.contains(".")) value = "https://" + value;
-        else if (!value.contains("://")) value = "https://www.google.com/search?q=" + Uri.encode(value);
+
+        if (!value.contains("://") && value.contains(".")) {
+            value = "https://" + value;
+        } else if (!value.contains("://")) {
+            value = "https://www.google.com/search?q=" + Uri.encode(value);
+        }
+
         WebTab tab = tabManager.getActive();
         if (tab != null) tab.webView.loadUrl(value);
     }
@@ -165,13 +248,49 @@ public class MainActivity extends Activity implements WebTabManager.Listener, We
     }
 
     private void loadHome(WebView view) {
-        String html = "<!doctype html><html><head><meta name='viewport' content='width=device-width,initial-scale=1'>" +
-                "<style>body{font-family:sans-serif;margin:24px;line-height:1.5}a{display:block;padding:16px;margin:12px 0;border-radius:12px;background:#f1edff;color:#342070;text-decoration:none;font-size:18px}</style></head>" +
-                "<body><h1>Universal Web-Mob 2</h1><p>PC-style web workspace for your phone.</p>" +
-                "<a href='" + StartPages.CHATGPT + "'>Open ChatGPT</a>" +
-                "<a href='" + StartPages.CLOUDFLARE + "'>Open Cloudflare</a>" +
-                "<a href='" + StartPages.GITHUB + "'>Open GitHub</a></body></html>";
-        view.loadDataWithBaseURL(null, html, "text/html", "UTF-8", null);
+        configureWebView(view);
+
+        String html =
+                "<!doctype html><html><head>" +
+                "<meta name='viewport' content='width=device-width,initial-scale=1,viewport-fit=cover'>" +
+                "<style>" +
+                "*{box-sizing:border-box}" +
+                "body{margin:0;background:linear-gradient(180deg,#fbfaff 0%,#f4f0ff 100%);" +
+                "font-family:Arial,sans-serif;color:#25202e}" +
+                ".wrap{max-width:720px;margin:0 auto;padding:42px 22px 56px}" +
+                ".brand{text-align:center}" +
+                ".logo{width:92px;height:92px;margin:4px auto 20px;display:block}" +
+                "h1{font-size:31px;line-height:1.12;margin:0 0 10px;letter-spacing:-.7px}" +
+                ".lead{font-size:16px;line-height:1.55;color:#686174;margin:0 auto 28px;max-width:560px}" +
+                ".card{background:#fff;border:1px solid #e8e2f4;border-radius:20px;padding:18px;" +
+                "margin:12px 0;box-shadow:0 5px 22px rgba(62,40,100,.06)}" +
+                ".card h2{font-size:17px;margin:0 0 5px}.card p{font-size:13px;color:#777080;margin:0 0 13px}" +
+                ".links{display:grid;grid-template-columns:1fr;gap:10px}" +
+                "a{display:block;text-decoration:none;color:#33245f;background:#f2edff;border-radius:14px;" +
+                "padding:14px 15px;font-weight:700;font-size:15px}" +
+                ".small{font-size:12px;color:#777080;text-align:center;margin-top:22px;line-height:1.5}" +
+                "@media(min-width:560px){.links{grid-template-columns:repeat(3,1fr)}a{min-height:72px}}" +
+                "</style></head><body>" +
+                "<main class='wrap'>" +
+                "<section class='brand'>" +
+                "<svg class='logo' viewBox='0 0 108 108' aria-label='Universal logo'>" +
+                "<circle cx='54' cy='54' r='48' fill='#7C5CFF'/>" +
+                "<path fill='#fff' d='M27 31 54 18l27 13-27 13-27-13m0 11 27 13 27-13v11L54 66 27 53V42m0 22 27 13 27-13v11L54 88 27 75V64'/>" +
+                "</svg>" +
+                "<h1>Welcome to Universal Web-Mob 2</h1>" +
+                "<p class='lead'>A lightweight web workspace built for serious work on your phone — with tabs, downloads, uploads and desktop-friendly web access.</p>" +
+                "</section>" +
+                "<section class='card'><h2>Start working</h2><p>Open one of the main services below.</p>" +
+                "<div class='links'>" +
+                "<a href='" + StartPages.CHATGPT + "'>ChatGPT</a>" +
+                "<a href='" + StartPages.GITHUB + "'>GitHub</a>" +
+                "<a href='" + StartPages.CLOUDFLARE + "'>Cloudflare</a>" +
+                "</div></section>" +
+                "<section class='card'><h2>Google sign-in</h2><p>Google authentication is opened in a secure browser tab rather than inside the embedded WebView.</p></section>" +
+                "<p class='small'>Use the address bar above for any HTTPS website. Your normal website sessions can remain available through WebView cookies and storage.</p>" +
+                "</main></body></html>";
+
+        view.loadDataWithBaseURL(null, html, "text/html", "UTF-8", "about:blank");
     }
 
     private void goBack() {
@@ -198,16 +317,22 @@ public class MainActivity extends Activity implements WebTabManager.Listener, We
         menu.getMenu().add("Open externally");
         menu.setOnMenuItemClickListener(item -> {
             String s = item.getTitle().toString();
-            if ("New tab".equals(s)) tabManager.createTab(StartPages.HOME);
-            else if ("Close tab".equals(s)) {
+
+            if ("New tab".equals(s)) {
+                WebTab t = tabManager.createTab(StartPages.HOME);
+                loadHome(t.webView);
+            } else if ("Close tab".equals(s)) {
                 WebTab t = tabManager.getActive();
                 if (t != null) tabManager.closeTab(t.id);
-            } else if ("Home".equals(s)) home();
-            else if ("Retry".equals(s)) reload();
-            else if ("Open externally".equals(s)) {
+            } else if ("Home".equals(s)) {
+                home();
+            } else if ("Retry".equals(s)) {
+                reload();
+            } else if ("Open externally".equals(s)) {
                 WebTab t = tabManager.getActive();
-                if (t != null && t.webView.getUrl() != null)
+                if (t != null && t.webView.getUrl() != null && !isHomeUrl(t.webView.getUrl())) {
                     WebIntentHandler.openExternal(this, Uri.parse(t.webView.getUrl()));
+                }
             }
             return true;
         });
@@ -219,8 +344,9 @@ public class MainActivity extends Activity implements WebTabManager.Listener, We
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode != 701) return;
-        if (resultCode == RESULT_OK && data != null) {
+        if (requestCode != FILE_CHOOSER_REQUEST) return;
+
+        if (resultCode == RESULT_OK && data != null && data.getData() != null) {
             MainActivityBridge.deliver(new Uri[]{data.getData()});
         } else {
             MainActivityBridge.cancel();
