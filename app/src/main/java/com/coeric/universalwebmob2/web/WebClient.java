@@ -9,7 +9,8 @@ import android.webkit.WebViewClient;
 
 public final class WebClient extends WebViewClient {
     public interface Listener {
-        void onPageState(WebView view, String url, String title, boolean loading, boolean error);\n        void onDesktopCompatibilityHint(WebView view);
+        void onPageState(WebView view, String url, String title, boolean loading, boolean error);
+        void onDesktopCompatibilityHint(WebView view);
     }
 
     private final Listener listener;
@@ -22,8 +23,6 @@ public final class WebClient extends WebViewClient {
     public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
         Uri uri = request.getUrl();
 
-        // Google explicitly blocks OAuth authorization inside embedded WebViews.
-        // Hand the authentication request to a secure browser/Custom Tab instead.
         if (request.isForMainFrame() && WebIntentHandler.isGoogleAuthenticationUrl(uri)) {
             WebIntentHandler.openGoogleAuthentication(view.getContext(), uri);
             return true;
@@ -46,6 +45,19 @@ public final class WebClient extends WebViewClient {
     @Override
     public void onPageFinished(WebView view, String url) {
         listener.onPageState(view, url, view.getTitle(), false, false);
+
+        if (url != null && (url.startsWith("http://") || url.startsWith("https://"))) {
+            view.evaluateJavascript(
+                    "(function(){return document.body ? document.body.innerText : '';})()",
+                    value -> {
+                        if (value == null) return;
+                        String text = value;
+                        if (text.length() > 30000) text = text.substring(0, 30000);
+                        if (CompatibilityDetector.requiresDesktopCompatibility(text)) {
+                            listener.onDesktopCompatibilityHint(view);
+                        }
+                    });
+        }
     }
 
     @Override
@@ -55,8 +67,6 @@ public final class WebClient extends WebViewClient {
             Uri uri = request.getUrl();
             String description = error == null ? "" : String.valueOf(error.getDescription());
 
-            // Some Google authentication failures arrive as an error page instead of
-            // a navigational callback. Give the user the secure-browser route.
             if (WebIntentHandler.isGoogleAuthenticationUrl(uri)
                     || description.toLowerCase().contains("disallowed_useragent")) {
                 WebIntentHandler.openGoogleAuthentication(view.getContext(), uri);
