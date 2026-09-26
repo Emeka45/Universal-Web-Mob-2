@@ -21,7 +21,8 @@ import android.widget.PopupMenu;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import com.coeric.universalwebmob2.web.CompatibilityProfile;\nimport com.coeric.universalwebmob2.web.MainActivityBridge;
+import com.coeric.universalwebmob2.web.CompatibilityProfile;
+import com.coeric.universalwebmob2.web.MainActivityBridge;
 import com.coeric.universalwebmob2.web.StartPages;
 import com.coeric.universalwebmob2.web.WebChromeClient;
 import com.coeric.universalwebmob2.web.WebClient;
