@@ -24,9 +24,7 @@ android {
     }
 
     buildTypes {
-        debug {
-            isMinifyEnabled = false
-        }
+        debug { isMinifyEnabled = false }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
@@ -50,4 +48,5 @@ android {
 }
 
 dependencies {
+    testImplementation("junit:junit:4.13.2")
 }
