@@ -1,0 +1,61 @@
+name: Android Build
+
+on:
+  push:
+    branches: [ main, feature/web-mob-2 ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  verify-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.6.0'
+
+      - name: Run unit tests
+        run: gradle test --no-daemon
+
+      - name: Build debug APK
+        run: gradle assembleDebug --no-daemon
+
+      - name: Build ABI split debug APKs
+        run: gradle assembleDebug -PsplitApks=true --no-daemon
+
+      - name: Build release APK
+        run: gradle assembleRelease --no-daemon
+
+      - name: Build Android App Bundle
+        run: gradle bundleRelease --no-daemon
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: universal-web-mob-2-debug
+          path: app/build/outputs/apk/debug/*.apk
+
+      - name: Upload ABI split APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: universal-web-mob-2-debug-abi
+          path: app/build/outputs/apk/debug/*.apk
+
+      - name: Upload release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: universal-web-mob-2-release
+          path: app/build/outputs/apk/release/*.apk
+
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: universal-web-mob-2-aab
+          path: app/build/outputs/bundle/release/*.aab
