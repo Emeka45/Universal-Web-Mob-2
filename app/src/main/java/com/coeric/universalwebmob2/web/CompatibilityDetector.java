@@ -13,7 +13,7 @@ public final class CompatibilityDetector {
     public static boolean requiresDesktopCompatibility(String text) {
         if (text == null || text.trim().isEmpty()) return false;
         String normalized = text.toLowerCase(Locale.US)
-                .replace('\\u00a0', ' ')
+                .replace('\u00A0', ' ')
                 .replaceAll("\\s+", " ");
         return DESKTOP_ONLY.matcher(normalized).find();
     }
