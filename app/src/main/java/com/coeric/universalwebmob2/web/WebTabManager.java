@@ -27,7 +27,7 @@ public final class WebTabManager {
     }
 
     public WebTab createTab(String url) {
-        WebView webView = new WebView(context.getApplicationContext());
+        WebView webView = new WebView(context);
         WebSettingsFactory.configure(webView, context);
         WebTab tab = new WebTab(nextId++, webView);
         tabs.add(tab);
