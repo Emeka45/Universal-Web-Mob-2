@@ -22,19 +22,24 @@ public final class WebClient extends WebViewClient {
     @Override
     public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
         Uri uri = request.getUrl();
+        String scheme = uri == null ? "" : String.valueOf(uri.getScheme());
 
         if (request.isForMainFrame() && WebIntentHandler.isGoogleAuthenticationUrl(uri)) {
-            WebIntentHandler.openGoogleAuthentication(view.getContext(), uri);
-            return true;
+            return WebIntentHandler.openGoogleAuthentication(view.getContext(), uri);
         }
 
-        String scheme = uri.getScheme();
+        if ("intent".equalsIgnoreCase(scheme)) {
+            return WebIntentHandler.openIntentUrl(view.getContext(), uri.toString());
+        }
+
         if ("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme)) {
             return false;
         }
 
-        WebIntentHandler.openExternal(view.getContext(), uri);
-        return true;
+        // Custom app/deep links must not leave the WebView on a blank/dead page.
+        // Launch them externally; if the target app is absent, the handler simply
+        // returns false and the current tab remains intact.
+        return WebIntentHandler.openExternal(view.getContext(), uri);
     }
 
     @Override
