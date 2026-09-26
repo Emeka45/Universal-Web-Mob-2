@@ -49,13 +49,13 @@ public final class WebSettingsFactory {
         if (profile == CompatibilityProfile.DESKTOP) {
             s.setUseWideViewPort(true);
             s.setLoadWithOverviewMode(false);
-            s.setInitialScale(100);
+            webView.setInitialScale(100);
             s.setTextZoom(100);
             s.setUserAgentString(toDesktopUa(nativeUa));
         } else {
             s.setUseWideViewPort(true);
             s.setLoadWithOverviewMode(true);
-            s.setInitialScale(0);
+            webView.setInitialScale(0);
             s.setTextZoom(100);
             s.setUserAgentString(nativeUa);
         }
