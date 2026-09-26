@@ -59,6 +59,7 @@ public final class WebTabManager {
         webContainer.addView(found.webView,
                 new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT));
+        applyCompatibility(found);
         listener.onActiveTabChanged(found);
         listener.onTabsChanged(new ArrayList<>(tabs));
     }
