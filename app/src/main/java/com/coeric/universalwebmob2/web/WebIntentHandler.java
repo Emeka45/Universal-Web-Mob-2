@@ -3,6 +3,7 @@ package com.coeric.universalwebmob2.web;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 
 import androidx.browser.customtabs.CustomTabsIntent;
 
@@ -12,9 +13,27 @@ public final class WebIntentHandler {
     /** Handles normal links, intent:// links and application/deep links without trapping the tab. */
     public static boolean openExternal(Context context, Uri uri) {
         if (uri == null) return false;
+
+        // Prefer a real non-browser app (for example an installed companion app).
+        // If none can handle it, fall back to the user's browser without trapping
+        // the WebView on an unhandled custom/deep link.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            try {
+                Intent appIntent = new Intent(Intent.ACTION_VIEW, uri);
+                appIntent.addCategory(Intent.CATEGORY_BROWSABLE);
+                appIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                        | Intent.FLAG_ACTIVITY_REQUIRE_NON_BROWSER);
+                context.startActivity(appIntent);
+                return true;
+            } catch (Exception ignored) {
+                // Continue to normal URL resolution below.
+            }
+        }
+
         try {
             Intent intent = new Intent(Intent.ACTION_VIEW, uri);
             intent.addCategory(Intent.CATEGORY_BROWSABLE);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(intent);
             return true;
         } catch (Exception ignored) {
