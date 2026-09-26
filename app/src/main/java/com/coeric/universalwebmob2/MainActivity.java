@@ -21,7 +21,7 @@ import android.widget.PopupMenu;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import com.coeric.universalwebmob2.web.MainActivityBridge;
+import com.coeric.universalwebmob2.web.CompatibilityProfile;\nimport com.coeric.universalwebmob2.web.MainActivityBridge;
 import com.coeric.universalwebmob2.web.StartPages;
 import com.coeric.universalwebmob2.web.WebChromeClient;
 import com.coeric.universalwebmob2.web.WebClient;
@@ -280,14 +280,14 @@ public class MainActivity extends Activity implements WebTabManager.Listener, We
                 "<h1>Welcome to Universal Web-Mob 2</h1>" +
                 "<p class='lead'>A lightweight web workspace built for serious work on your phone — with tabs, downloads, uploads and desktop-friendly web access.</p>" +
                 "</section>" +
-                "<section class='card'><h2>Start working</h2><p>Open one of the main services below.</p>" +
+                "<section class='card'><h2>Desktop-class web access</h2><p>Universal Web-Mob 2 can adapt a site when its mobile compatibility page asks for a desktop browser.</p>" +
                 "<div class='links'>" +
-                "<a href='" + StartPages.CHATGPT + "'>ChatGPT</a>" +
-                "<a href='" + StartPages.GITHUB + "'>GitHub</a>" +
-                "<a href='" + StartPages.CLOUDFLARE + "'>Cloudflare</a>" +
+                "<a href='https://www.google.com/'>Open the web</a>" +
+                "<a href='https://www.wikipedia.org/'>Research</a>" +
+                "<a href='https://www.youtube.com/'>Media</a>" +
                 "</div></section>" +
-                "<section class='card'><h2>Google sign-in</h2><p>Google authentication is opened in a secure browser tab rather than inside the embedded WebView.</p></section>" +
-                "<p class='small'>Use the address bar above for any HTTPS website. Your normal website sessions can remain available through WebView cookies and storage.</p>" +
+                "<section class='card'><h2>Universal compatibility</h2><p>Use the menu to choose Universal, Mobile or Desktop compatibility for the current tab. Universal Web-Mob 2 can also detect common desktop-only messages and retry automatically.</p></section>" +
+                "<p class='small'>Use the address bar above for any HTTPS website. Some services may still enforce their own device, account, security or feature restrictions.</p>" +
                 "</main></body></html>";
 
         view.loadDataWithBaseURL(null, html, "text/html", "UTF-8", "about:blank");
@@ -314,6 +314,9 @@ public class MainActivity extends Activity implements WebTabManager.Listener, We
         menu.getMenu().add("Close tab");
         menu.getMenu().add("Home");
         menu.getMenu().add("Retry");
+        menu.getMenu().add("Universal compatibility");
+        menu.getMenu().add("Mobile compatibility");
+        menu.getMenu().add("Desktop compatibility");
         menu.getMenu().add("Open externally");
         menu.setOnMenuItemClickListener(item -> {
             String s = item.getTitle().toString();
@@ -328,6 +331,12 @@ public class MainActivity extends Activity implements WebTabManager.Listener, We
                 home();
             } else if ("Retry".equals(s)) {
                 reload();
+            } else if ("Universal compatibility".equals(s)) {
+                setCompatibility(CompatibilityProfile.UNIVERSAL);
+            } else if ("Mobile compatibility".equals(s)) {
+                setCompatibility(CompatibilityProfile.MOBILE);
+            } else if ("Desktop compatibility".equals(s)) {
+                setCompatibility(CompatibilityProfile.DESKTOP);
             } else if ("Open externally".equals(s)) {
                 WebTab t = tabManager.getActive();
                 if (t != null && t.webView.getUrl() != null && !isHomeUrl(t.webView.getUrl())) {
