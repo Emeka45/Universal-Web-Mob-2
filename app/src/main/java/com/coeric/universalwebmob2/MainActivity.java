@@ -446,6 +446,14 @@ public class MainActivity extends Activity implements WebTabManager.Listener, We
         if (compatibilityFallbackPanel != null) compatibilityFallbackPanel.setVisibility(View.GONE);
     }
 
+    @Override
+    public void onExternalNavigationUnavailable(WebView view, String url) {
+        WebTab active = tabManager == null ? null : tabManager.getActive();
+        if (active == null || active.webView != view) return;
+        showCompatibilityFallback();
+        Toast.makeText(this, "This link needs an external app, but none could open it.", Toast.LENGTH_LONG).show();
+    }
+
     private void setCompatibility(CompatibilityProfile profile) {
         WebTab active = tabManager == null ? null : tabManager.getActive();
         if (active == null) return;
