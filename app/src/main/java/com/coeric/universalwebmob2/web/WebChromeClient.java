@@ -4,10 +4,9 @@ import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.webkit.ValueCallback;
-import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 
-public final class WebChromeClient extends WebChromeClient {
+public final class WebChromeClient extends android.webkit.WebChromeClient {
     private final Activity activity;
 
     public WebChromeClient(Activity activity) {
@@ -20,11 +19,11 @@ public final class WebChromeClient extends WebChromeClient {
         Intent intent = params.createIntent();
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         try {
-            activity.startActivityForResult(intent, 701);
             MainActivityBridge.setPendingFileCallback(callback);
+            activity.startActivityForResult(intent, 701);
             return true;
         } catch (Exception e) {
-            callback.onReceiveValue(null);
+            MainActivityBridge.cancel();
             return false;
         }
     }
