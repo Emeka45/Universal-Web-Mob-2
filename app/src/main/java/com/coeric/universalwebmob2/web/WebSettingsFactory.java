@@ -1,6 +1,7 @@
 package com.coeric.universalwebmob2.web;
 
 import android.content.Context;
+import android.os.Build;
 import android.webkit.CookieManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -18,18 +19,41 @@ public final class WebSettingsFactory {
 
     public static void configure(WebView webView, Context context) {
         WebSettings s = webView.getSettings();
+
+        // Core web compatibility.
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
         s.setDatabaseEnabled(true);
-        s.setAllowFileAccess(false);
-        s.setAllowContentAccess(true);
+        s.setJavaScriptCanOpenWindowsAutomatically(true);
+        s.setSupportMultipleWindows(true);
         s.setSupportZoom(true);
         s.setBuiltInZoomControls(true);
         s.setDisplayZoomControls(false);
+        s.setUseWideViewPort(true);
+        s.setLoadWithOverviewMode(true);
+
+        // Allow normal user content and downloads without granting file://
+        // pages unrestricted access to the local filesystem.
+        s.setAllowFileAccess(false);
+        s.setAllowContentAccess(true);
+
+        // Keep media behavior predictable; websites can still request playback
+        // through normal WebView mechanisms.
         s.setMediaPlaybackRequiresUserGesture(true);
-        s.setJavaScriptCanOpenWindowsAutomatically(true);
-        s.setSupportMultipleWindows(true);
-        s.setSafeBrowsingEnabled(true);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            // Some otherwise-HTTPS sites still contain HTTP assets. Compatibility
+            // mode permits those assets without enabling unrestricted mixed content.
+            s.setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            s.setSafeBrowsingEnabled(true);
+        }
+
+        // Do not let WebView cache failures indefinitely. Normal HTTP caching is
+        // still available, while reloads can recover from stale network state.
+        s.setCacheMode(WebSettings.LOAD_DEFAULT);
 
         String nativeUa = s.getUserAgentString();
         NATIVE_UAS.put(webView, nativeUa);
@@ -37,6 +61,7 @@ public final class WebSettingsFactory {
         CookieManager cookies = CookieManager.getInstance();
         cookies.setAcceptCookie(true);
         cookies.setAcceptThirdPartyCookies(webView, true);
+        cookies.flush();
     }
 
     public static void applyProfile(WebView webView, CompatibilityProfile profile) {
