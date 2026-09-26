@@ -146,7 +146,7 @@ public class MainActivity extends Activity implements WebTabManager.Listener, We
 
     private void configureWebView(WebView view) {
         view.setWebViewClient(new WebClient(this));
-        view.setWebChromeClient(new WebChromeClient(this));
+        view.setWebChromeClient(new WebChromeClient(this, tabManager));
         view.setDownloadListener(new WebDownloadHandler(this));
     }
 
