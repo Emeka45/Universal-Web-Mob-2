@@ -9,7 +9,7 @@ import android.webkit.WebViewClient;
 
 public final class WebClient extends WebViewClient {
     public interface Listener {
-        void onPageState(WebView view, String url, String title, boolean loading, boolean error);
+        void onPageState(WebView view, String url, String title, boolean loading, boolean error);\n        void onDesktopCompatibilityHint(WebView view);
     }
 
     private final Listener listener;
