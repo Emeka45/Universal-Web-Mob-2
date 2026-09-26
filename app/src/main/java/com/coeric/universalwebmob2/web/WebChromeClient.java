@@ -38,6 +38,7 @@ public final class WebChromeClient extends android.webkit.WebChromeClient {
         return new WebClient.Listener() {
             @Override public void onPageState(WebView view, String url, String title, boolean loading, boolean error) {}
             @Override public void onDesktopCompatibilityHint(WebView view) {}
+            @Override public void onExternalNavigationUnavailable(WebView view, String url) {}
         };
     }
 
