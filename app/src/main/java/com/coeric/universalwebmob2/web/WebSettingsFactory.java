@@ -32,7 +32,6 @@ public final class WebSettingsFactory {
 
         String nativeUa = s.getUserAgentString();
         NATIVE_UAS.put(webView, nativeUa);
-        applyProfile(webView, CompatibilityProfile.UNIVERSAL);
 
         CookieManager cookies = CookieManager.getInstance();
         cookies.setAcceptCookie(true);
