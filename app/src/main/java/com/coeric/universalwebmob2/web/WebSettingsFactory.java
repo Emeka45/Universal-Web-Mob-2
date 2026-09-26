@@ -8,7 +8,7 @@ import android.webkit.WebView;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public final class WebSettingsFactory {
+import java.util.WeakHashMap;\n\npublic final class WebSettingsFactory {
     private static final Pattern CHROME_VERSION =
             Pattern.compile("Chrome/([0-9.]+)", Pattern.CASE_INSENSITIVE);
 
