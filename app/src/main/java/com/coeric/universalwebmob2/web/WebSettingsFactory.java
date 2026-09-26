@@ -27,7 +27,8 @@ public final class WebSettingsFactory {
         s.setBuiltInZoomControls(true);
         s.setDisplayZoomControls(false);
         s.setMediaPlaybackRequiresUserGesture(true);
-        s.setJavaScriptCanOpenWindowsAutomatically(false);
+        s.setJavaScriptCanOpenWindowsAutomatically(true);
+        s.setSupportMultipleWindows(true);
         s.setSafeBrowsingEnabled(true);
 
         String nativeUa = s.getUserAgentString();
