@@ -5,12 +5,14 @@ import android.webkit.CookieManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
+import java.util.WeakHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import java.util.WeakHashMap;\n\npublic final class WebSettingsFactory {
+public final class WebSettingsFactory {
     private static final Pattern CHROME_VERSION =
             Pattern.compile("Chrome/([0-9.]+)", Pattern.CASE_INSENSITIVE);
+    private static final WeakHashMap<WebView, String> NATIVE_UAS = new WeakHashMap<>();
 
     private WebSettingsFactory() {}
 
@@ -28,12 +30,8 @@ import java.util.WeakHashMap;\n\npublic final class WebSettingsFactory {
         s.setJavaScriptCanOpenWindowsAutomatically(false);
         s.setSafeBrowsingEnabled(true);
 
-        // Start from the real Android WebView identity. A single hard-coded desktop
-        // UA is deliberately avoided because UA, viewport and WebView capabilities
-        // are separate compatibility signals.
         String nativeUa = s.getUserAgentString();
-        s.setUserAgentString(nativeUa);
-
+        NATIVE_UAS.put(webView, nativeUa);
         applyProfile(webView, CompatibilityProfile.UNIVERSAL);
 
         CookieManager cookies = CookieManager.getInstance();
@@ -43,12 +41,10 @@ import java.util.WeakHashMap;\n\npublic final class WebSettingsFactory {
 
     public static void applyProfile(WebView webView, CompatibilityProfile profile) {
         WebSettings s = webView.getSettings();
-        String nativeUa = webView.getTag(com.coeric.universalwebmob2.R.id.native_ua_tag) instanceof String
-                ? (String) webView.getTag(com.coeric.universalwebmob2.R.id.native_ua_tag)
-                : s.getUserAgentString();
-
-        if (webView.getTag(com.coeric.universalwebmob2.R.id.native_ua_tag) == null) {
-            webView.setTag(com.coeric.universalwebmob2.R.id.native_ua_tag, nativeUa);
+        String nativeUa = NATIVE_UAS.get(webView);
+        if (nativeUa == null) {
+            nativeUa = s.getUserAgentString();
+            NATIVE_UAS.put(webView, nativeUa);
         }
 
         if (profile == CompatibilityProfile.DESKTOP) {
