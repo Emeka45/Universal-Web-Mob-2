@@ -37,7 +37,12 @@ public final class WebTabManager {
         return tab;
     }
 
-    public void applyCompatibility(WebTab tab) {\n        if (tab == null) return;\n        WebSettingsFactory.applyProfile(tab.webView, tab.compatibilityProfile);\n    }\n\n    public void selectTab(int id) {
+    public void applyCompatibility(WebTab tab) {
+        if (tab == null) return;
+        WebSettingsFactory.applyProfile(tab.webView, tab.compatibilityProfile);
+    }
+
+    public void selectTab(int id) {
         WebTab found = null;
         for (WebTab tab : tabs) {
             if (tab.id == id) {
