@@ -32,7 +32,8 @@ public final class WebTabManager {
         WebTab tab = new WebTab(nextId++, webView);
         tabs.add(tab);
         selectTab(tab.id);
-        if (url != null) webView.loadUrl(url);
+        // HOME is an app-owned start page rendered by MainActivity; it is not a real URL.
+        if (url != null && !StartPages.HOME.equals(url)) webView.loadUrl(url);
         return tab;
     }
 
