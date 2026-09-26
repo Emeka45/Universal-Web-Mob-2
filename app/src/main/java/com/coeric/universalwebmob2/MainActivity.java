@@ -352,6 +352,31 @@ public class MainActivity extends Activity implements WebTabManager.Listener, We
     private void updateButtons() {}
 
     @Override
+    public void onDesktopCompatibilityHint(WebView view) {
+        WebTab active = tabManager == null ? null : tabManager.getActive();
+        if (active == null || active.webView != view) return;
+        if (active.compatibilityProfile == CompatibilityProfile.DESKTOP
+                || active.desktopRetryAttempted) return;
+
+        active.desktopRetryAttempted = true;
+        active.compatibilityProfile = CompatibilityProfile.DESKTOP;
+        tabManager.applyCompatibility(active);
+        Toast.makeText(this, "Universal compatibility mode enabled for this site.",
+                Toast.LENGTH_SHORT).show();
+        view.reload();
+    }
+
+    private void setCompatibility(CompatibilityProfile profile) {
+        WebTab active = tabManager == null ? null : tabManager.getActive();
+        if (active == null) return;
+
+        active.compatibilityProfile = profile;
+        active.desktopRetryAttempted = profile == CompatibilityProfile.DESKTOP;
+        tabManager.applyCompatibility(active);
+        active.webView.reload();
+    }
+
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode != FILE_CHOOSER_REQUEST) return;
